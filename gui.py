@@ -391,13 +391,13 @@ class StatusBadge(tk.Frame):
 
 
 class TabButton(RoundedSurface):
-    def __init__(self, parent, text, on_click):
-        super().__init__(parent, SEC_SURF, radius=12)
+    def __init__(self, parent, text, on_click, width=150, height=40):
+        super().__init__(parent, SEC_SURF, radius=12, width=width, height=height)
         self.on_click = on_click
         self.selected = False
         self.label = tk.Label(self.body, text=text, font=("Segoe UI Semibold", 10),
                               bg=SEC_SURF, fg=SEC_TEXT, cursor="hand2")
-        self.label.pack(expand=True, fill="both")
+        self.label.pack(expand=True, fill="both", padx=20, pady=8)
 
         self.canvas.configure(cursor="hand2")
         self.body.configure(cursor="hand2")
@@ -449,24 +449,17 @@ class TabSwitcher(tk.Frame):
         self.current = default
         self.on_select = on_select
         self.labels = {name: name for name in names}
+        self.buttons = {}
 
         self.bar = tk.Frame(self, bg=bg_parent, highlightthickness=0)
         self.bar.pack(fill="x")
 
-        self.title = tk.Label(self.bar, text=self.current.upper(), font=("Segoe UI Semibold", 10),
-                              bg=bg_parent, fg=PRI_TEXT)
-        self.title.pack(side="left")
-
-        self.arrow = RoundedButton(self.bar, "›", 38, 32, self.advance, ACC_CRIMSON,
-                                   HOV_CRIMSON, PRS_CRIMSON, PRI_TEXT,
-                                   ("Segoe UI Semibold", 13), radius=10)
-        self.arrow.pack(side="left", padx=(10, 0))
+        for index, name in enumerate(names):
+            btn = TabButton(self.bar, name.upper(), lambda n=name: self.select(n))
+            btn.pack(side="left", padx=(0, 10) if index < len(names) - 1 else 0)
+            self.buttons[name] = btn
 
         self._update_display()
-
-    def advance(self):
-        index = self.names.index(self.current)
-        self.select(self.names[(index + 1) % len(self.names)])
 
     def select(self, name):
         if name == self.current:
@@ -477,11 +470,12 @@ class TabSwitcher(tk.Frame):
 
     def set_text(self, name, text):
         self.labels[name] = text
-        if self.current == name:
-            self.title.configure(text=text.upper())
+        self.buttons[name].set_text(text.upper())
 
     def _update_display(self):
-        self.title.configure(text=self.labels[self.current].upper())
+        for name, btn in self.buttons.items():
+            btn.set_selected(name == self.current, animate=False)
+            btn.set_text(self.labels[name].upper())
 
 
 class CrimsonApp:
